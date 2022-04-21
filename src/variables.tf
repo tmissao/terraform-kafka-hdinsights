@@ -35,6 +35,7 @@ variable "storage_account_container" {
   }
 }
 
+// change it
 variable "vnet" {
   default = {
     name          = "sonarqube"
@@ -42,10 +43,18 @@ variable "vnet" {
   }
 }
 
-variable "subnet" {
+//change it
+variable "subnet_kafka" {
   default = {
     name          = "default"
     address_space = ["10.0.0.0/24"]
+  }
+}
+
+variable "subnet_k8s" {
+  default = {
+    name          = "k8s"
+    address_space = ["10.0.1.0/24"]
   }
 }
 
@@ -95,6 +104,90 @@ variable "kafka_topics" {
       replication_factor = 1
       partitions         = 1
     }
+  }
+}
+
+variable "kubernetes" {
+  default = {
+    name = "acqio-kafka-demo-k8s"
+    dns_prefix = "acqiokafkak8s"
+    kubernetes_version = "1.21.9"
+    role_based_access_control_enabled = true
+    sku_tier = "Paid"
+    automatic_channel_upgrade = null
+    default_node_pool = {
+      name = "default"
+      vm_size = "Standard_A2m_V2"
+      enable_auto_scaling = false
+      node_count = 3
+      enable_host_encryption = false
+      node_labels = { "node-type" = "system" }
+      zones = [1,2,3]
+    }
+    network_profile = {
+      network_plugin = "azure"
+      network_policy = "calico"
+      service_cidr  = "10.0.3.0/24"
+      docker_bridge_cidr = "172.17.0.1/16"
+    }
+    auto_scaler_profile = {
+      expander = "most-pods"
+    }
+    node_pools = {
+      kafkaconnect = {
+        name = "kafkaconnect"
+        vm_size = "Standard_A2m_V2"
+        enable_auto_scaling = true
+        eviction_policy = "Delete"
+        priority = "Spot"
+        spot_max_price = -1
+        mode = "User"
+        node_labels = { 
+          "node-type" = "kafkaconnect"
+          "kubernetes.azure.com/scalesetpriority" = "spot"
+        }
+        node_taints = [
+          "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+        ]
+        zones = [1,2,3]
+        node_count = 3
+        min_count = 2
+        max_count = 5
+      }
+    }
+  }
+}
+
+variable "helm_nginx" {
+  default = {
+    name  = "nginx"
+    repository  = "https://kubernetes.github.io/ingress-nginx"
+    namespace = "nginx"
+    chart = "ingress-nginx"
+    version = "4.0.19"
+    create_namespace = true
+  }
+}
+
+variable "helm_kafka_ui" {
+  default = {
+    name  = "kafka-ui"
+    repository  = "https://provectus.github.io/kafka-ui"
+    namespace = "kafka"
+    chart = "kafka-ui"
+    version = "0.3.3"
+    create_namespace = true
+  }
+}
+
+variable "helm_strimzi_kafka" {
+  default = {
+    name  = "strimzi-kafka"
+    repository  = "https://strimzi.io/charts/"
+    namespace = "kafka"
+    chart = "strimzi-kafka-operator"
+    version = "0.19.0"
+    create_namespace = true
   }
 }
 

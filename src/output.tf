@@ -9,3 +9,8 @@ output "kafka" {
     brokers    = data.external.kafka_getinfo.result.brokers
   }
 }
+
+output "kubeconfig" {
+  sensitive = true
+  value = azurerm_kubernetes_cluster.this.kube_config_raw
+}

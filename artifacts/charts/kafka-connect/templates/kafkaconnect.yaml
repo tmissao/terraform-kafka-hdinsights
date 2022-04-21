@@ -1,0 +1,47 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaConnect
+metadata:
+  name: {{ include "template.fullname" . }}
+  labels:
+    {{- include "template.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key, $value := .Values.kafkaConnectAnnotations }}
+      {{- printf "%s: %s" $key ($value | quote) | nindent 4 }}
+    {{- end }}
+spec:
+  version: {{ .Values.version }}
+  replicas: {{ .Values.replicaCount }}
+  bootstrapServers: {{ .Values.bootstrapServers }}
+  config:
+    group.id: {{ include "template.fullname" . }}
+    offset.storage.topic: {{ include "template.fullname" . }}-offsets
+    config.storage.topic: {{ include "template.fullname" . }}-configs
+    status.storage.topic: {{ include "template.fullname" . }}-status
+    {{- toYaml .Values.config | nindent 4 }}
+  {{- if  .Values.nodeSelector }}
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            {{- range $key, $value := .Values.nodeSelector }}
+            - matchExpressions:
+              - key: {{ $key }}
+                operator: In
+                values:
+                - {{ $value }} 
+            {{- end }}
+  {{- end }}
+  jvmOptions:
+    {{- range $key, $value := .Values.jmvOptions }}
+      {{- printf "%s: %s" ($key | quote ) ($value | quote) | nindent 4 }}
+    {{- end }}
+  resources:
+    {{- toYaml .Values.resources | nindent 4 }}
+  logging:
+    {{- toYaml .Values.logging | nindent 4 }}
+  readinessProbe:
+    {{- toYaml .Values.readinessProbe | nindent 4 }}
+  livenessProbe:
+    {{- toYaml .Values.livenessProbe | nindent 4 }}

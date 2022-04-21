@@ -46,3 +46,10 @@ bin/kafka-console-producer.sh --broker-list <broker> --topic <topic-name> --prop
 ```bash
 bin/kafka-console-consumer.sh --bootstrap-server <broker> --topic <topic-name> --from-beginning --property parse.key=true --property key.separator=
 ```
+
+## References
+---
+
+https://strimzi.io/docs/operators/latest/configuring.html#assembly-kafka-connect-str
+https://dzone.com/articles/kafka-connect-on-kubernetes-the-easy-way
+https://strimzi.io/docs/operators/latest/configuring.html#assembly-kafka-connect-str
